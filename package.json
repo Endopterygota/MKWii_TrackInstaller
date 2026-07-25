@@ -1,0 +1,70 @@
+{
+  "name": "mkwii-track-installer-desktop-ui",
+  "description": "Desktop UI foundation for installing and testing Mario Kart Wii custom tracks.",
+  "author": "Linus",
+  "private": true,
+  "version": "0.7.0",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "desktop": "npm run build:native && npm run build && electron .",
+    "build:native": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build-native.ps1",
+    "test:szs-diff": "node --test tests/szs-diff.test.cjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --max-warnings=0",
+    "build": "tsc -b && vite build --configLoader runner",
+    "build:exe": "npm run build:native && npm run build && electron-builder --win portable --x64",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "framer-motion": "^12.38.0",
+    "lucide-react": "^0.575.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.32.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.0.4",
+    "electron": "^38.2.1",
+    "electron-builder": "^26.0.12",
+    "eslint": "^9.32.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^15.15.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.56.1",
+    "vite": "^7.3.1"
+  },
+  "build": {
+    "appId": "de.linus.mkwiitrackinstaller",
+    "productName": "MKWii Track Installer",
+    "asar": true,
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "native/bin",
+        "to": "native",
+        "filter": ["MKWiiBackend.exe"]
+      }
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "MKWii-Track-Installer-${version}-portable.${ext}"
+    }
+  }
+}
