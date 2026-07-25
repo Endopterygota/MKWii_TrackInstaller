@@ -1,58 +1,101 @@
 # MKWii Track Installer
 
-MKWii Track Installer is a Windows desktop application for creating, checking, installing, and testing Mario Kart Wii custom tracks. It combines a React/Electron interface with a native C# automation backend.
+Desktop application for creating, validating, installing, and testing custom Mario Kart Wii tracks. Built with Electron + React (TypeScript) and a native C# automation backend.
 
-Die Designanalyse und Übertragung auf die MKWii-Informationsarchitektur stehen in [`LOVABLE_ANALYSE.md`](./LOVABLE_ANALYSE.md).
+![version](https://img.shields.io/badge/version-0.8.0-blue) ![platform](https://img.shields.io/badge/platform-Windows%20only-red)
 
-## Preserved design patterns
+## Features
 
-- Responsive application shell with desktop side navigation and mobile bottom navigation
-- Central semantic design tokens for color, type, radius, borders, shadows, and state colors
-- Dark animated veil background and translucent liquid-glass surfaces
-- Large page headings, uppercase eyebrow labels, status pills, stat cards, action cards, and navigation tiles
-- Framer Motion page transitions, card lift, button press feedback, and modal transitions
-- Reusable cards, buttons, fields, status pills, and dialogs
-- Desktop-first split layout with a persistent automation console
-- Responsive collapse to one column below 1200px and mobile navigation below 760px
-- Reduced-motion support
+- **Project management** — auto-detects track file folders and SZS archives from your project directory
+- **SZS tools** — run `wszst create` and `wszst check` in the background with a live color-coded console
+- **SZS content diff** — compare newly built archives against the previous version, showing added, modified, and removed files
+- **One-click install & launch** — inject tracks into a WIT test ISO and start Dolphin automatically
+- **Dual language** — full German and English UI support
+- **Portable distribution** — self-contained EXE with no installation required
 
-## Removed Expense It concerns
+## Requirements
 
-- Expense, receipt, reimbursement, approval, trip, finance, policy, report, and AI-assistant routes
-- Supabase schemas, server functions, queries, realtime subscriptions, and storage
-- Email/password and Google authentication
-- Employee, manager, finance, and administrator personas
-- Receipt upload, camera, OCR, currency, and CSV logic
+| Tool | Purpose |
+|---|---|
+| [MKWii original ISO](https://www.wiimm.fi/wiki/Mario_Kart_WII) | Source game data |
+| [Wiimm's SZS Tools (wszst)](https://code.google.com/archive/p/wiimm-szs-tools/) | Create and validate track archives |
+| [Wiimm's ISO Tools (WIT)](https://code.google.com/archive/p/wii-iso-tools/) | Modify the test ISO |
+| [Dolphin](https://dolphin-emu.org/) | Emulator for testing tracks |
 
-## MKWii information architecture
+## Quick start
 
-- **Overview** — project health, ISO target, quick install actions
-- **Track project** — project folder, content-detected track-files folder, SZS dropdown, folder-structure generator, WiiScrubber, and ISO target file
-- **SZS tools** — background `wszst create` and `wszst check` surfaces
-- **Settings** — freely selectable original/test ISO paths, language, Dolphin, WIT, and run controls
-- **Automation console** — persistent, color-coded process output
-
-The UI is connected to the native automation backend for WiiScrubber, Dolphin, `wszst create`, and `wszst check`. Process output is streamed into the console automatically.
-
-## Windows EXE
-
-Die Oberfläche kann als portable Windows-EXE ohne separaten Browser gestartet werden. Die fertige Datei liegt nach dem Build unter:
-
-```text
-release/MKWii-Track-Installer-0.6.0-portable.exe
-```
-
-Die EXE enthält die benötigte Electron-Laufzeit und das native Automatisierungs-Backend. Eine Installation ist nicht erforderlich. Original-ISO und WIT-Test-ISO dürfen in jedem erreichbaren Ordner liegen. WiiScrubber, Dolphin, Wiimms ISO Tools und Wiimms SZS Tools werden über die in der App gewählten lokalen Pfade beziehungsweise den Windows-PATH verwendet.
+Download the portable EXE from the `release/` folder, run it, and configure your tool paths in Settings. No installation or dependencies needed.
 
 ## Development
 
 ```bash
 npm install
-npm run typecheck
+
+# Verify code quality (lint → typecheck)
 npm run lint
+npm run typecheck
+
+# Run tests
 npm run test:szs-diff
-npm run build
+
+# Vite dev server (browser, no Electron)
 npm run dev
+
+# Full stack: compile C# backend → build → launch Electron
 npm run desktop
+
+# Build portable Windows EXE into release/
 npm run build:exe
 ```
+
+## Architecture
+
+Three layers communicating via IPC and environment variables:
+
+| Layer | Tech | Entry point |
+|---|---|---|
+| **UI** | React 19 + TypeScript (Vite, ESM) | `src/main.tsx` → `App.tsx` |
+| **Electron main** | CommonJS (`.cjs`) | `electron/main.cjs` |
+| **Native backend** | C# (.NET Framework WinForms) | `native/TrackInstallerBackend.cs` → `MKWiiBackend.exe` |
+
+### Automation pipeline
+
+The native backend handles GUI automation for external tools. It communicates with Electron via environment variables (`MKWII_*`) and tab-delimited log lines prefixed with `MKWII_LOG\t<level>\t<base64 text>`.
+
+Seven automation commands flow through `startAutomation()` in the main process:
+
+| Command | Pipeline |
+|---|---|
+| `install` | WIT → swap SZS into test ISO |
+| `install-play` | WIT → Dolphin |
+| `build-wit-install-play` | wszst create → WIT → Dolphin |
+| `wszst-create` | wszst create (with content diff) |
+| `wszst-check` | wszst check |
+| `wit-install` | WIT install only |
+| `wit-install-play` | WIT install → Dolphin |
+
+### Pages
+
+No router — five conditionally rendered pages in `App.tsx`:
+
+- **Overview** — project health, ISO status, quick install actions
+- **Track Project** — project folder analysis, SZS selection, structure generator
+- **Tools** — wszst create/check, SZS content diff viewer
+- **Settings** — language, tool paths, run controls (pause/stop)
+- **Legacy** — deprecated WiiScrubber bridge
+
+## Build pipeline
+
+```
+scripts/build-native.ps1  →  native/bin/MKWiiBackend.exe
+tsc -b + vite build       →  dist/
+electron-builder          →  release/*.exe
+```
+
+The C# backend is compiled via `csc.exe` from the .NET Framework (not the modern `dotnet` CLI). The portable EXE bundles Electron, the UI, and the native backend into a single file.
+
+## Safety notes
+
+- Never modify your backup ISO — only the designated test ISO is modified
+- Original ISO and WIT test ISO may reside in any accessible folder
+- Config persists to `%APPDATA%/mkwiitrackinstaller/settings.json`
