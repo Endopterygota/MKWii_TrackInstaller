@@ -9,6 +9,7 @@ import { ProjectPage, type ProjectConfig } from "./pages/ProjectPage";
 import { ToolsPage } from "./pages/ToolsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { LegacyPage } from "./pages/LegacyPage";
+import { WorkflowPage } from "./pages/WorkflowPage";
 
 type DialogKind = "install" | "play" | "create" | "check" | "wit-install" | "wit-play" | "full-run" | null;
 
@@ -306,6 +307,7 @@ export default function App() {
       {page === "overview" && <OverviewPage onInstall={() => setDialog("wit-install")} onInstallAndPlay={() => setDialog("wit-play")} onBuildInstallAndPlay={() => setDialog("full-run")} trackName={trackName} targetFile={config.targetFile} iso={iso} testIso={testIso} busy={busy} language={language} />}
       {page === "project" && <ProjectPage config={config} szsFiles={szsFiles} folderDetection={folderDetection} onChange={setConfig} onSave={() => void saveProject()} onBrowse={(kind) => void browse(kind)} structureName={structureName} structureBasePath={structureBasePath} structureBusy={structureBusy} onStructureNameChange={setStructureName} onStructureBasePathChange={setStructureBasePath} onBrowseStructureBase={() => void browse("structure-base")} onCreateStructure={() => void createStructure()} busy={busy} language={language} />}
       {page === "tools" && <ToolsPage onCreate={() => setDialog("create")} onCheck={() => setDialog("check")} trackTarget={trackTarget} busy={busy} language={language} comparison={szsComparison} />}
+      {page === "workflow" && <WorkflowPage language={language} />}
       {page === "legacy" && <LegacyPage onInstall={() => setDialog("install")} onInstallAndPlay={() => setDialog("play")} iso={iso} busy={busy} language={language} />}
       {page === "settings" && <SettingsPage language={language} dolphin={dolphin} wit={wit} iso={iso} testIso={testIso} scrubber={config.scrubber} busy={busy} paused={paused} onLanguageToggle={toggleLanguage} onBrowseDolphin={() => void browse("dolphin")} onBrowseWit={() => void browse("wit")} onBrowseIso={() => void browse("iso")} onBrowseTestIso={() => void browse("test-iso")} onBrowseScrubber={() => void browse("scrubber")} onPauseToggle={() => void togglePause()} onStop={() => void stop()} />}
 

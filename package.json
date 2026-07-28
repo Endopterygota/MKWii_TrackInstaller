@@ -3,7 +3,7 @@
   "description": "Desktop UI foundation for installing and testing Mario Kart Wii custom tracks.",
   "author": "Linus",
   "private": true,
-  "version": "0.7.0",
+  "version": "0.10.3",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -51,17 +51,22 @@
       {
         "from": "native/bin",
         "to": "native",
-        "filter": ["MKWiiBackend.exe"]
+        "filter": [
+          "MKWiiBackend.exe"
+        ]
       }
     ],
     "directories": {
       "output": "release"
     },
     "win": {
+      "icon": "public/icon.ico",
       "target": [
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "artifactName": "MKWii-Track-Installer-${version}-portable.${ext}"
