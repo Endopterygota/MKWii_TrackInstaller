@@ -2,7 +2,7 @@
 
 Desktop application for creating, validating, installing, and testing custom Mario Kart Wii tracks. Built with Electron + React (TypeScript) and a native C# automation backend.
 
-![version](https://img.shields.io/badge/version-0.10.1-blue) ![platform](https://img.shields.io/badge/platform-Windows%20only-red)
+![version](https://img.shields.io/badge/version-0.10.3-blue) ![platform](https://img.shields.io/badge/platform-Windows%20only-red)
 
 ## Features
 
