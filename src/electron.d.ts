@@ -52,6 +52,30 @@ type DeleteAdditionalFilesResult = {
   skipped: Array<{ path: string; reason: string }>;
 };
 
+type UpdateCheckResult = {
+  currentVersion: string;
+  latestVersion: string;
+  updateAvailable: boolean;
+  releaseUrl: string;
+  publishedAt: string;
+  assetName: string | null;
+  assetSize: number | null;
+  checksumAvailable: boolean;
+};
+
+type UpdateDownloadResult = {
+  filePath: string;
+  assetName: string;
+  version: string;
+  checksumVerified: boolean;
+};
+
+type UpdateProgress = {
+  received: number;
+  total: number;
+  percent: number;
+};
+
 interface Window {
   mkwii?: {
     loadConfig: () => Promise<DesktopConfig>;
@@ -64,7 +88,11 @@ interface Window {
     pause: (paused: boolean) => Promise<{ running: boolean; paused: boolean }>;
     stop: () => Promise<{ running: boolean }>;
     getState: () => Promise<AutomationState>;
+    checkForUpdates: () => Promise<UpdateCheckResult>;
+    downloadUpdate: () => Promise<UpdateDownloadResult>;
+    installUpdate: () => Promise<{ started: boolean; version: string }>;
     onLog: (callback: (entry: { time: string; level: AutomationLogLevel; text: string }) => void) => () => void;
     onState: (callback: (state: AutomationState) => void) => () => void;
+    onUpdateProgress: (callback: (progress: UpdateProgress) => void) => () => void;
   };
 }

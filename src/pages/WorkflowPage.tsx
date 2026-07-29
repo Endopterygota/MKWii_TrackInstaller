@@ -21,12 +21,14 @@ export function WorkflowPage({ language }: WorkflowPageProps) {
   const steps: Step[] = [
     {
       num: 1,
+
       title: en ? "Plan & model your track" : "Strecken-Design & Modellierung",
       desc: en
         ? "Design your course geometry in a 3D editor. Keep all coordinates between -131071 and +131071 to avoid item-placement bugs."
         : "Gestalten Sie die Geometrie Ihrer Strecke in einem 3D-Editor. Halten Sie alle Koordinaten zwischen -131071 und +131071, um Item-Platzierungsfehler zu vermeiden.",
       tool: en ? "Blender (recommended)" : "Blender (empfohlen)",
       icon: Layers,
+      link: "https://www.blender.org/download/",
       details: [
         en ? "Create the course model that will become course_model.brres" : "Erstellen Sie das Kurs-Modell, das zu course_model.brres wird",
         en ? "Create the background/sky dome → vrcorn_model.brres" : "Erstellen Sie den Hintergrund/Himmel → vrcorn_model.brres",
@@ -36,6 +38,28 @@ export function WorkflowPage({ language }: WorkflowPageProps) {
     },
     {
       num: 2,
+      title: en ? "Generate lightmaps" : "Lightmaps erstellen",
+      desc: en
+        ? "Bake a lightmap so your track displays correct lighting and shadows in-game."
+        : "Erzeugen Sie eine Lightmap, damit Ihre Strecke im Spiel korrekte Beleuchtung und Schatten anzeigt.",
+      tool: en ? "Blender + UV Pack add-on" : "Blender + UV Pack Addon",
+      icon: Layers,
+      link: "https://docs.blender.org/manual/en/latest/render/lights/unreal_pbs.html#baking-lightmaps",
+      details: [
+        en ? "Join all mesh objects that require lighting into a single object" : "Fügen Sie alle Mesh-Objekte, die Beleuchtung benötigen, zu einem Objekt zusammen",
+        en ? "Separate the merged mesh by material for clean grouping" : "Trennen Sie das vereinte Mesh nach Materialien für eine ordentliche Gruppierung",
+        en ? "Create a new UV map dedicated to lightmap UVs (separate from your diffuse UVs)" : "Erstellen Sie eine neue UV-Karte, die ausschließlich für Lightmap-UVs vorgesehen ist (getrennt von den Diffus-UVs)",
+        en ? 'Use the <b>UV Pack</b> add-on to pack lightmap islands without overlap' : 'Nutzen Sie das <b>UV Pack</b>-Addon, um Lightmap-Inseln ohne Überlappung anzulegen',
+        en ? "In the Shader Editor, add a UV Map node pointing to your new lightmap UV channel" : "Fügen Sie im Shader-Editor einen UV-Map-Knoten hinzu, der auf den neuen Lightmap-UV-Kanal verweist",
+        en ? "Connect it to an Image Texture node with a fresh 1024×1024 image — this will become your lightmap" : "Verbinden Sie ihn mit einem Bildtextur-Knoten und einem neuen 1024×1024-Bild — dies wird Ihre Lightmap",
+        en ? "Add an additional UV Map node for your original diffuse texture, pointing to the original UV channel" : "Fügen Sie einen weiteren UV-Map-Knoten für die ursprüngliche Diffus-Textur hinzu und verweisen Sie auf den originalen UV-Kanal",
+        en ? "Select the lightmap Image Texture in the editor so Blender recognizes it as the bake target" : "Wählen Sie die Lightmap-Bildtextur im Editor aus, damit sie als Bake-Ziel erkannt wird",
+        en ? "Adjust indirect light strength to your liking, then click Bake (type: Combined) in Render Properties" : "Passen Sie die Indirekte-Beleuchtung-Stärke an und klicken Sie auf Bake (Typ: Combined) in den Render-Eigenschaften",
+        en ? "Save the resulting lightmap image for use with your BRRES export" : "Speichern Sie die erstellte Lightmap zum Einsatz beim BRRES-Export",
+      ],
+    },
+    {
+      num: 3,
       title: en ? "Create collision data (.kcl)" : "Kollisionsdaten erstellen (.kcl)",
       desc: en
         ? "Generate the KCL file that defines where the kart can drive, walls, boost pads, and off-bounds areas."
@@ -50,14 +74,14 @@ export function WorkflowPage({ language }: WorkflowPageProps) {
       ],
     },
     {
-      num: 3,
+      num: 4,
       title: en ? "Edit course objects & cameras (.kmp)" : "Kursobjekte und Kameras bearbeiten (.kmp)",
       desc: en
         ? "Place item boxes, checkpoints, animated objects (trees etc.), start positions, and intro/replay cameras."
         : "Platzieren Sie Item-Boxen, Checkpoints, animierte Objekte (Bäume usw.), Startpositionen sowie Intro- und Replay-Kameras.",
       tool: en ? "Lorenzi's KMP Editor" : "Lorenzis KMP-Editor",
       icon: Settings2,
-      link: "https://github.com/hlorenzi/kmp-editor",
+      link: "https://github.com/hlorenzi/kmp-editor/releases",
       details: [
         en ? "Set start positions for all racers and checkpoints along the route" : "Legen Sie Startpositionen für alle Rennfahrer und Checkpoints entlang der Route fest",
         en ? "Place objects (item boxes, trees, decorations) using built-in MKW object IDs" : "Platziere Objekte (Item-Boxen, Bäume, Dekorationen) mit den integrierten MKW-Objekt-IDs",
@@ -72,6 +96,7 @@ export function WorkflowPage({ language }: WorkflowPageProps) {
         : "Objekte benötigen oft begleitende BRRES- und KCL-Dateien. Post-Effect-Ordner steuern Nebel, Bloom und Beleuchtung.",
       tool: en ? "Extract from original ISO" : "Aus Original-ISO extrahieren",
       icon: Package2,
+      link: "https://wit.wiimm.de/download.html",
       details: [
         en ? "Import objects from vanilla tracks (partition:0 › Race)" : "Importieren Sie Objekte aus originalen Strecken (Partition:0 › Race)",
         en ? "Ensure all associated BRRES, KCL, brasd, and effect files are present" : "Stellen Sie sicher, dass alle zugehörigen BRRES-, KCL-, brasd- und Effektdateien vorhanden sind",
@@ -127,6 +152,7 @@ export function WorkflowPage({ language }: WorkflowPageProps) {
         : "Starten Sie die modifizierte ISO in Dolphin und testen Sie Ihre Strecke.",
       tool: en ? "Dolphin Emulator" : "Dolphin-Emulator",
       icon: Play,
+      link: "https://dolphin-emu.org/download/",
       details: [
         en ? 'One-click: <b>Overview</b> tab → "Build, install & launch" runs create + install + Dolphin' : 'Ein-Klick: Reiter <b>Übersicht</b> → "Erstellen, einsetzen & starten" führt Create + Installieren + Dolphin aus',
         en ? "Check for crashes: check skip shortcuts, underground camera bug, slow-motion bug" : "Prüfen Sie auf Abstürze: Check-Skip-Shortcuts, Untergrund-Kamera-Bug, Zeitlupe-Bug",
@@ -147,6 +173,11 @@ export function WorkflowPage({ language }: WorkflowPageProps) {
       desc: en ? "Master reference for all track creation topics" : "Hauptreferenz für alle Themen der Streckenerstellung",
     },
     {
+      title: en ? "Blender — Download" : "Blender — Download",
+      url: "https://www.blender.org/download/",
+      desc: en ? "Official download page for the recommended 3D editor" : "Offizielle Downloadseite des empfohlenen 3D-Editors",
+    },
+    {
       title: en ? "Blender-MKW-Utilities (Endopterygota)" : "Blender-MKW-Utilities (Endopterygota)",
       url: "https://github.com/Endopterygota/Blender-MKW-Utilities",
       desc: en ? "KCL export addon for Blender (fork)" : "KCL-Export-Addon für Blender (Fork)",
@@ -158,13 +189,23 @@ export function WorkflowPage({ language }: WorkflowPageProps) {
     },
     {
       title: "KMP Editor (Lorenzi)",
-      url: "https://github.com/hlorenzi/kmp-editor",
-      desc: en ? "Most comprehensive MKW KMP editor" : "Umfassendster MKW-KMP-Editor",
+      url: "https://github.com/hlorenzi/kmp-editor/releases",
+      desc: en ? "GitHub releases for the MKW KMP editor" : "GitHub-Releases des MKW-KMP-Editors",
     },
     {
       title: "Wiimms SZS Tools (wszst)",
-      url: "https://szs.wiimm.de/",
-      desc: en ? "Command-line tools for SZS, KCL, and KMP" : "Befehlszeilentools für SZS, KCL und KMP",
+      url: "https://szs.wiimm.de/download.html",
+      desc: en ? "Official downloads for SZS, KCL, and KMP command-line tools" : "Offizielle Downloads der SZS-, KCL- und KMP-Befehlszeilentools",
+    },
+    {
+      title: "Wiimms ISO Tools (WIT)",
+      url: "https://wit.wiimm.de/download.html",
+      desc: en ? "Official downloads for creating and editing Wii ISO files" : "Offizielle Downloads zum Erstellen und Bearbeiten von Wii-ISO-Dateien",
+    },
+    {
+      title: en ? "Dolphin Emulator — Download" : "Dolphin-Emulator — Download",
+      url: "https://dolphin-emu.org/download/",
+      desc: en ? "Official downloads for testing the modified ISO" : "Offizielle Downloads zum Testen der veränderten ISO",
     },
     {
       title: en ? "Common Crash Causes" : "Häufige Absturzursachen",
