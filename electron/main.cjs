@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain, shell } = require("electron");
 const { spawn } = require("node:child_process");
 const fs = require("node:fs");
 const fsp = require("node:fs/promises");
@@ -6,8 +6,18 @@ const os = require("node:os");
 const path = require("node:path");
 const readline = require("node:readline");
 const { compareSzsArchives } = require("./szs-diff.cjs");
+const { createUpdateService } = require("./update-service.cjs");
 const programFiles = process.env.ProgramFiles || process.env.ProgramW6432 || "";
 const commonWitPath = programFiles ? path.join(programFiles, "Wiimm", "WIT", "wit.exe") : "";
+const allowedExternalHosts = new Set([
+  "www.blender.org",
+  "github.com",
+  "mkwiiki.org",
+  "szs.wiimm.de",
+  "wit.wiimm.de",
+  "dolphin-emu.org",
+  "www.dolphin-emu.org",
+]);
 
 const allowedCommands = new Set([
   "install",
@@ -35,6 +45,7 @@ const defaultConfig = {
 
 let mainWindow = null;
 let activeRun = null;
+let updateService = null;
 
 const configPath = () => path.join(app.getPath("userData"), "settings.json");
 const backendPath = () => app.isPackaged
@@ -392,6 +403,39 @@ async function choosePath(kind, currentPath = "") {
   return result.canceled ? null : result.filePaths[0];
 }
 
+function isAllowedExternalUrl(rawUrl) {
+  try {
+    const url = new URL(rawUrl);
+    return url.protocol === "https:" && allowedExternalHosts.has(url.hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
+function openExternalUrl(rawUrl) {
+  if (!isAllowedExternalUrl(rawUrl)) return;
+  void shell.openExternal(rawUrl).catch(() => {});
+}
+
+async function installDownloadedUpdate() {
+  if (activeRun) throw new Error("Bitte den laufenden Ablauf vor dem Neustart beenden.");
+  if (!app.isPackaged) throw new Error("Der Neustart mit Update ist nur in der gebauten App verfügbar.");
+  const update = await updateService.getDownloadedUpdate();
+  const child = spawn(update.filePath, [], {
+    detached: true,
+    stdio: "ignore",
+    windowsHide: false,
+    shell: false,
+  });
+  await new Promise((resolve, reject) => {
+    child.once("spawn", resolve);
+    child.once("error", reject);
+  });
+  child.unref();
+  setTimeout(() => app.quit(), 300);
+  return { started: true, version: update.version };
+}
+
 function registerIpc() {
   ipcMain.handle("config:load", loadConfig);
   ipcMain.handle("config:save", (_event, value) => saveConfig(value));
@@ -403,6 +447,9 @@ function registerIpc() {
   ipcMain.handle("automation:pause", (_event, paused) => setPaused(Boolean(paused)));
   ipcMain.handle("automation:stop", stopAutomation);
   ipcMain.handle("automation:state", () => activeRun ? { running: true, paused: activeRun.paused, command: activeRun.command } : { running: false, paused: false, command: null });
+  ipcMain.handle("updates:check", () => updateService.check());
+  ipcMain.handle("updates:download", () => updateService.download());
+  ipcMain.handle("updates:install", installDownloadedUpdate);
 }
 
 function createWindow() {
@@ -424,9 +471,14 @@ function createWindow() {
     },
   });
 
-  mainWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    openExternalUrl(url);
+    return { action: "deny" };
+  });
   mainWindow.webContents.on("will-navigate", (event, url) => {
-    if (!url.startsWith("file://")) event.preventDefault();
+    if (url.startsWith("file://")) return;
+    event.preventDefault();
+    openExternalUrl(url);
   });
   mainWindow.once("ready-to-show", () => mainWindow.show());
   mainWindow.on("closed", () => { mainWindow = null; });
@@ -434,6 +486,11 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  updateService = createUpdateService({
+    currentVersion: app.getVersion(),
+    updatesDirectory: path.join(app.getPath("userData"), "updates"),
+    emitProgress: (progress) => emit("updates:progress", progress),
+  });
   registerIpc();
   createWindow();
   app.on("activate", () => {

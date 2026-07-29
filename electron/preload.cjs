@@ -11,6 +11,9 @@ contextBridge.exposeInMainWorld("mkwii", {
   pause: (paused) => ipcRenderer.invoke("automation:pause", paused),
   stop: () => ipcRenderer.invoke("automation:stop"),
   getState: () => ipcRenderer.invoke("automation:state"),
+  checkForUpdates: () => ipcRenderer.invoke("updates:check"),
+  downloadUpdate: () => ipcRenderer.invoke("updates:download"),
+  installUpdate: () => ipcRenderer.invoke("updates:install"),
   onLog: (callback) => {
     const listener = (_event, entry) => callback(entry);
     ipcRenderer.on("automation:log", listener);
@@ -20,5 +23,10 @@ contextBridge.exposeInMainWorld("mkwii", {
     const listener = (_event, state) => callback(state);
     ipcRenderer.on("automation:state", listener);
     return () => ipcRenderer.removeListener("automation:state", listener);
+  },
+  onUpdateProgress: (callback) => {
+    const listener = (_event, progress) => callback(progress);
+    ipcRenderer.on("updates:progress", listener);
+    return () => ipcRenderer.removeListener("updates:progress", listener);
   },
 });

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FocusEvent, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Archive, BookOpen, FolderCog, Gauge, Languages, Settings2, Wrench, type LucideIcon } from "lucide-react";
 
@@ -15,39 +15,45 @@ type AppShellProps = {
   consolePanel: ReactNode;
 };
 
-const EXPAND_THRESHOLD = 40;
-
 export function AppShell({ page, onPageChange, language, onLanguageToggle, children, consolePanel }: AppShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
-  const collapseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoCollapseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const english = language === "en";
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (e.clientX <= EXPAND_THRESHOLD) {
-      if (collapseTimer.current) {
-        clearTimeout(collapseTimer.current);
-        collapseTimer.current = null;
-      }
-      setSidebarCollapsed(false);
-    } else if (!sidebarCollapsed && e.clientX > 160) {
-      if (collapseTimer.current) clearTimeout(collapseTimer.current);
-      collapseTimer.current = setTimeout(() => setSidebarCollapsed(true), 200);
-    }
-  }, [sidebarCollapsed]);
-
   useEffect(() => {
-    window.addEventListener("mousemove", handleMouseMove);
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      if (collapseTimer.current) clearTimeout(collapseTimer.current);
+      if (autoCollapseTimer.current) clearTimeout(autoCollapseTimer.current);
     };
-  }, [handleMouseMove]);
+  }, []);
+
+  const cancelAutoCollapse = () => {
+    if (!autoCollapseTimer.current) return;
+    clearTimeout(autoCollapseTimer.current);
+    autoCollapseTimer.current = null;
+  };
+
+  const expandSidebar = () => {
+    cancelAutoCollapse();
+    setSidebarCollapsed(false);
+  };
+
+  const scheduleAutoCollapse = () => {
+    cancelAutoCollapse();
+    autoCollapseTimer.current = setTimeout(() => {
+      setSidebarCollapsed(true);
+      autoCollapseTimer.current = null;
+    }, 420);
+  };
+
+  const handleSidebarBlur = (event: FocusEvent<HTMLElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) scheduleAutoCollapse();
+  };
 
   const navItems: NavItem[] = [
     { id: "overview", label: english ? "Overview" : "Übersicht", shortLabel: "Home", icon: Gauge },
     { id: "project", label: english ? "Track project" : "Streckenprojekt", shortLabel: english ? "Project" : "Projekt", icon: FolderCog },
     { id: "tools", label: english ? "SZS tools" : "SZS-Werkzeuge", shortLabel: "Tools", icon: Wrench },
-    { id: "workflow", label: english ? "Track workflow" : "Strecken-Workflow", shortLabel: "Workflow", icon: BookOpen },
+    { id: "workflow", label: english ? "Workflow & Links" : "Workflow & Links", shortLabel: "Workflow", icon: BookOpen },
     { id: "legacy", label: english ? "Legacy features" : "Veraltete Funktionen", shortLabel: "Legacy", icon: Archive },
     { id: "settings", label: english ? "Settings" : "Einstellungen", shortLabel: english ? "Setup" : "Setup", icon: Settings2 },
   ];
@@ -55,7 +61,14 @@ export function AppShell({ page, onPageChange, language, onLanguageToggle, child
     <div className={`app-shell ${sidebarCollapsed ? "app-shell--collapsed" : ""}`}>
       <div className="veil" aria-hidden><span /><span /><span /></div>
 
-      <aside className="sidebar glass-surface sidebar--liquid" aria-label={english ? "Application sidebar" : "Anwendungsseitenleiste"}>
+      <aside
+        className="sidebar glass-surface sidebar--liquid"
+        aria-label={english ? "Application sidebar" : "Anwendungsseitenleiste"}
+        onPointerEnter={expandSidebar}
+        onPointerLeave={scheduleAutoCollapse}
+        onFocusCapture={expandSidebar}
+        onBlurCapture={handleSidebarBlur}
+      >
         <div className="brand">
           <span className="brand__mark">MK</span>
           <AnimatePresence initial={false}>

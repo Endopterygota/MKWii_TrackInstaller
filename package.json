@@ -3,7 +3,7 @@
   "description": "Desktop UI foundation for installing and testing Mario Kart Wii custom tracks.",
   "author": "Linus",
   "private": true,
-  "version": "0.8.0",
+  "version": "1.0.2",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -11,6 +11,7 @@
     "desktop": "npm run build:native && npm run build && electron .",
     "build:native": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build-native.ps1",
     "test:szs-diff": "node --test tests/szs-diff.test.cjs",
+    "test:update": "node --test tests/update-service.test.cjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --max-warnings=0",
     "build": "tsc -b && vite build --configLoader runner",
